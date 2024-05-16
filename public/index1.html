@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Workspace Manager</title>
+    <style>
+      /* General styling for workspace areas */
+      .workspace {
+        width: 150px;
+        height: 150px;
+        min-width: 200px;
+        margin: 10px;
+        background: #007bff; /* A pleasant blue */
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        column-gap: 60px;
+        row-gap: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      #workspaces-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      /* Link styling */
+
+      /* Form styling */
+      #new-workspace-form {
+        background-color: #ffffff;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 300px;
+      }
+
+      /* Button styling */
+      button {
+        width: 100%;
+        background-color: #28a745; /* Green shade */
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      /* General page layout and typography */
+      body {
+        font-family: "Arial", sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My WorkSpaces</h1>
+    <div id="workspaces-container"></div>
+
+    <div id="new-workspace-form">
+      <h2>Add New WorkSpace</h2>
+      <input
+        type="text"
+        id="new-title"
+        placeholder="Name of work spaces"
+        maxlength="100"
+      />
+      <textarea id="new-description" placeholder="Description"></textarea>
+      <button onclick="createWorkspace()">Create</button>
+    </div>
+
+    <script>
+      function loadWorkspaces() {
+        fetch("/api/workspaces")
+          .then((response) => response.json())
+          .then((workspaces) => {
+            const container = document.getElementById("workspaces-container");
+            container.innerHTML = ""; // Clear previous entries
+            workspaces.forEach((ws) => {
+              const div = document.createElement("div");
+              div.className = "workspace";
+              const link = document.createElement("a");
+              link.href = `workspace.html?id=${ws.id}`;
+              link.textContent = ws.title;
+              div.appendChild(link);
+              container.appendChild(div);
+            });
+          });
+      }
+
+      function createWorkspace() {
+        const title = document.getElementById("new-title").value;
+        const description = document.getElementById("new-description").value;
+        fetch("/api/workspaces", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description }),
+        }).then((response) => {
+          if (response.ok) {
+            loadWorkspaces(); // Reload the list
+            document.getElementById("new-title").value = ""; // Clear fields
+            document.getElementById("new-description").value = "";
+          } else {
+            alert("Failed to create workspace");
+          }
+        });
+      }
+
+      window.onload = loadWorkspaces;
+    </script>
+  </body>
+</html>

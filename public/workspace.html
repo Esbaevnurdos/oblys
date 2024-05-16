@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Workspace Details</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1 id="workspace-title">Workspace Title</h1>
+    <p id="workspace-description">Workspace Description</p>
+
+    <div>
+      <h2>Edit Workspace</h2>
+      <input type="text" id="edit-title" placeholder="New title" />
+      <textarea id="edit-description" placeholder="New description"></textarea>
+      <button onclick="updateWorkspace()">Update</button>
+    </div>
+
+    <div>
+      <h2>Tokens</h2>
+      <div id="tokens-container"></div>
+      <input type="text" id="new-token-name" placeholder="Token name" />
+      <button onclick="createToken()">Generate Token</button>
+    </div>
+
+    <a href="/">Back to all workspaces</a>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const workspaceId = params.get("id");
+
+      function loadWorkspaceDetails() {
+        fetch(`/api/workspaces/${workspaceId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("workspace-title").textContent =
+              data.workspace.title;
+            document.getElementById("workspace-description").textContent =
+              data.workspace.description;
+            document.getElementById("edit-title").value = data.workspace.title;
+            document.getElementById("edit-description").value =
+              data.workspace.description;
+
+            const tokensContainer = document.getElementById("tokens-container");
+            tokensContainer.innerHTML = ""; // Clear previous tokens
+            data.tokens.forEach((token) => {
+              const div = document.createElement("div");
+
+              if (token.token) {
+                div.textContent = `${token.name} token: ${token.token}`;
+              } else {
+                div.textContent = `${token.name} token: Not available`;
+              }
+
+              div.textContent = `${token.name} token: ${token.token}`;
+              if (!token.revokedAt) {
+                const okayButton = document.createElement("button");
+                okayButton.textContent = "Okay";
+                okayButton.onclick = () => revokeToken(token.id);
+                div.appendChild(okayButton);
+              } else {
+                div.textContent += ` - Revoked at: ${token.revokedAt}`;
+              }
+              tokensContainer.appendChild(div);
+            });
+          });
+      }
+
+      function updateWorkspace() {
+        const title = document.getElementById("edit-title").value;
+        const description = document.getElementById("edit-description").value;
+        fetch(`/api/workspaces/${workspaceId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description }),
+        }).then((response) => {
+          if (response.ok) {
+            loadWorkspaceDetails(); // Reload details
+          } else {
+            alert("Failed to update workspace");
+          }
+        });
+      }
+
+      function createToken() {
+        const name = document.getElementById("new-token-name").value;
+        fetch(`/api/workspaces/${workspaceId}/tokens`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        }).then((response) => {
+          if (response.ok) {
+            loadWorkspaceDetails(); // Reload tokens
+            document.getElementById("new-token-name").value = ""; // Clear field
+          } else {
+            alert("Failed to generate token");
+          }
+        });
+      }
+
+      function revokeToken(tokenId) {
+        fetch(`/api/tokens/${tokenId}/revoke`, {
+          method: "PATCH",
+        }).then((response) => {
+          if (response.ok) {
+            loadWorkspaceDetails(); // Update the list of tokens
+          } else {
+            alert("Failed to revoke token");
+          }
+        });
+      }
+
+      window.onload = loadWorkspaceDetails;
+    </script>
+  </body>
+</html>

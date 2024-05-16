@@ -1,0 +1,28 @@
+.workspace {
+  width: 100px;
+  height: 100px;
+  margin: 5px;
+  background: gray;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+  padding-top: 40px;
+}
+.workspace input,
+.workspace textarea {
+  width: 90%;
+  margin: 5px;
+}
+a {
+  color: white;
+  text-decoration: none;
+}
+#new-workspace-form {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-top: 20px;
+}
+button {
+  margin-top: 10px;
+}
